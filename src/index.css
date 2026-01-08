@@ -318,3 +318,24 @@ button:hover {
   flex-direction: column;
   align-items: center;
 }
+
+.month-selector {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+  align-items: center;
+}
+
+.month-selector select {
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.pie-wrapper {
+  width: 240px;
+  height: 240px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
