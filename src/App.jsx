@@ -548,6 +548,7 @@ function App() {
             <option>Bills</option>
             <option>Subscriptions</option>
             <option>Salary</option>
+            <option>Bonus</option>
             <option>Others</option>
           </select>
 
