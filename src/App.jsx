@@ -11,7 +11,7 @@ import {
   LineElement,
 } from "chart.js";
 import { Pie, Bar, Line } from "react-chartjs-2";
-
+ 
 ChartJS.register(
   ArcElement,
   Tooltip,
@@ -22,81 +22,84 @@ ChartJS.register(
   PointElement,
   LineElement
 );
-
+ 
 function App() {
   /* ================= THEME ================= */
   const [theme, setTheme] = useState(
     () => localStorage.getItem("theme") || "light"
   );
-
+ 
   useEffect(() => {
     document.body.className = theme;
     localStorage.setItem("theme", theme);
   }, [theme]);
-
+ 
   /* ================= STATE ================= */
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem("transactions");
     return saved ? JSON.parse(saved) : [];
   });
-
+ 
   const [budgets, setBudgets] = useState(() => {
     const saved = localStorage.getItem("budgets");
     return saved ? JSON.parse(saved) : {};
   });
-
+ 
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("Food");
   const [customCategory, setCustomCategory] = useState("");
   const [type, setType] = useState("Income");
-
+ 
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const currentYear = new Date().getFullYear();
   const monthKey = `${currentYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
-
+ 
+  /* ================= MENU ================= */
+  const [menuOpen, setMenuOpen] = useState(false);
+ 
   /* ================= CONTACT ================= */
   const [contactMessage, setContactMessage] = useState("");
   const [messageSent, setMessageSent] = useState(false);
-
+ 
   function handleContactSubmit(e) {
     e.preventDefault();
     if (!contactMessage.trim()) return;
-
+ 
     setMessageSent(true);
     setContactMessage("");
-
+ 
     setTimeout(() => setMessageSent(false), 3000);
   }
-
+ 
   /* ================= PERSIST ================= */
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
-
+ 
   useEffect(() => {
     localStorage.setItem("budgets", JSON.stringify(budgets));
   }, [budgets]);
-
+ 
   /* ================= FILTERED DATA ================= */
   const filteredTransactions = transactions.filter((t) => {
     const d = new Date(t.date);
     return d.getMonth() === selectedMonth && d.getFullYear() === currentYear;
   });
-
+ 
   const income = filteredTransactions
     .filter((t) => t.type === "Income")
     .reduce((s, t) => s + t.amount, 0);
-
+ 
   const expense = filteredTransactions
     .filter((t) => t.type === "Expense")
     .reduce((s, t) => s + t.amount, 0);
-
+ 
   const balance = income - expense;
-
+ 
   /* ================= PREVIOUS MONTH COMPARISON ================= */
   const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
   const prevYear = selectedMonth === 0 ? currentYear - 1 : currentYear;
-
+ 
   const prevMonthExpense = transactions
     .filter((t) => {
       const d = new Date(t.date);
@@ -107,7 +110,7 @@ function App() {
       );
     })
     .reduce((s, t) => s + t.amount, 0);
-
+ 
   let monthComparison = null;
   if (prevMonthExpense > 0) {
     const diff = expense - prevMonthExpense;
@@ -117,17 +120,17 @@ function App() {
         ? `Your expenses increased by ${percent}% compared to last month.`
         : `Your expenses decreased by ${percent}% compared to last month.`;
   }
-
+ 
   /* ================= TRANSACTIONS ================= */
   function addTransaction() {
     if (!amount) return;
     const value = Number(amount);
     if (type === "Expense" && value > balance) return;
-
+ 
     const finalCategory =
       category === "Other" ? customCategory.trim() : category;
     if (!finalCategory) return;
-
+ 
     setTransactions([
       ...transactions,
       {
@@ -137,24 +140,24 @@ function App() {
         date: new Date(currentYear, selectedMonth, 1).toISOString(),
       },
     ]);
-
+ 
     setAmount("");
     setCustomCategory("");
     setCategory("Food");
   }
-
+ 
   function deleteTransaction(index) {
     const tx = filteredTransactions[index];
     setTransactions(transactions.filter((t) => t !== tx));
   }
-
+ 
   /* ================= BUDGET LOGIC ================= */
   const monthBudget = budgets[monthKey]?.monthly || "";
   const categoryBudgets = budgets[monthKey]?.categories || {};
-
+ 
   const monthlyUsage =
     monthBudget > 0 ? (expense / monthBudget) * 100 : 0;
-
+ 
   const categoryExpenses = {};
   filteredTransactions
     .filter((t) => t.type === "Expense")
@@ -162,34 +165,34 @@ function App() {
       categoryExpenses[t.category] =
         (categoryExpenses[t.category] || 0) + t.amount;
     });
-
+ 
   const exceededCategories = Object.entries(categoryBudgets)
     .filter(([cat, b]) => categoryExpenses[cat] > b)
     .map(([cat]) => cat);
-
+ 
   const budgetPressure =
     exceededCategories.length > 0
       ? `You exceeded ${exceededCategories.join(" and ")} budgets this month.`
       : null;
-
+ 
   let savingsInsight = null;
   if (income > 0) {
     const savedPercent = ((balance / income) * 100).toFixed(0);
     savingsInsight = `You saved ${savedPercent}% of your income this month 👏.`;
   }
-
+ 
   function budgetState(p) {
     if (p >= 100) return "danger";
     if (p >= 80) return "warning";
     return "normal";
   }
-
+ 
   function budgetMessage(p) {
     if (p >= 100) return "Budget exceeded ❌";
     if (p >= 80) return "Approaching budget limit ⚠️";
     return "Within budget ✅";
   }
-
+ 
   function updateMonthlyBudget(value) {
     setBudgets({
       ...budgets,
@@ -200,7 +203,7 @@ function App() {
       },
     });
   }
-
+ 
   function updateCategoryBudget(cat, value) {
     setBudgets({
       ...budgets,
@@ -213,7 +216,7 @@ function App() {
       },
     });
   }
-
+ 
   /* ================= TOP CATEGORY ================= */
   let topCategory = null;
   let topAmount = 0;
@@ -223,7 +226,7 @@ function App() {
       topCategory = cat;
     }
   });
-
+ 
   /* ================= CHART DATA ================= */
   const pieData = {
     labels: Object.keys(categoryExpenses),
@@ -240,13 +243,13 @@ function App() {
       },
     ],
   };
-
+ 
   const pieOptions = {
     responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { position: "bottom" } },
   };
-
+ 
   const barData = {
     labels: ["Income", "Expense"],
     datasets: [
@@ -257,7 +260,7 @@ function App() {
       },
     ],
   };
-
+ 
   const lineData = {
     labels: filteredTransactions.map((_, i) => `T${i + 1}`),
     datasets: [
@@ -273,27 +276,84 @@ function App() {
       },
     ],
   };
-
+ 
   const months = [
     "January","February","March","April","May","June",
     "July","August","September","October","November","December"
   ];
-
+ 
   const budgetCategories = ["Food", "Rent", "Travel", "Shopping"];
-
+ 
   /* ================= UI ================= */
   return (
-    <div className="app">
+    <div className={`app ${menuOpen ? "menu-open" : ""}`}>
+      {/* HAMBURGER MENU BUTTON */}
+      <button className="hamburger-menu" onClick={() => setMenuOpen(!menuOpen)}>
+        <span className={menuOpen ? "open" : ""}></span>
+        <span className={menuOpen ? "open" : ""}></span>
+        <span className={menuOpen ? "open" : ""}></span>
+      </button>
+ 
+      {/* SIDEBAR MENU */}
+      <div className={`sidebar ${menuOpen ? "open" : ""}`}>
+        <div className="sidebar-header">
+          <h2>Category Budgets</h2>
+          <button className="close-btn" onClick={() => setMenuOpen(false)}>✕</button>
+        </div>
+        <div className="sidebar-content">
+          {budgetCategories.map((cat) => {
+            const budget = categoryBudgets[cat];
+            const spent = categoryExpenses[cat] || 0;
+            const percent = budget ? (spent / budget) * 100 : 0;
+ 
+            return (
+              <div key={cat} className="sidebar-category">
+                <div className="sidebar-category-header">
+                  <strong>{cat}</strong>
+                  {budget && (
+                    <span className="sidebar-budget-amount">
+                      ₹{spent} / ₹{budget}
+                    </span>
+                  )}
+                </div>
+                {budget && (
+                  <>
+                    <div className={`budget-bar ${budgetState(percent)}`}>
+                      <div style={{ width: `${Math.min(percent, 100)}%` }} />
+                    </div>
+                    <small>
+                      {percent.toFixed(1)}% — {budgetMessage(percent)}
+                    </small>
+                  </>
+                )}
+                <div className="sidebar-category-input">
+                  <label>{cat} Budget</label>
+                  <input
+                    type="number"
+                    placeholder="Set budget"
+                    value={categoryBudgets[cat] || ""}
+                    onChange={(e) => updateCategoryBudget(cat, e.target.value)}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+ 
+      {/* OVERLAY */}
+      {menuOpen && <div className="overlay" onClick={() => setMenuOpen(false)}></div>}
+ 
       <div className="container">
-
+ 
         <div className="theme-toggle">
           <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
             {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
           </button>
         </div>
-
+ 
         <h1>Expense Tracker</h1>
-
+ 
         {/* MONTH SELECTOR */}
         <div className="month-selector">
           <label>Month:</label>
@@ -306,129 +366,14 @@ function App() {
             ))}
           </select>
         </div>
-
+ 
         {/* SUMMARY */}
         <div className="summary">
           <div className="card"><span>Balance</span><h2>₹{balance}</h2></div>
           <div className="card income"><span>Income</span><h2>₹{income}</h2></div>
           <div className="card expense"><span>Expense</span><h2>₹{expense}</h2></div>
         </div>
-
-        {/* MONTHLY BUDGET */}
-        <div className="budget-card">
-          <h3>Monthly Budget</h3>
-          <input
-            type="number"
-            placeholder="Set monthly budget"
-            value={monthBudget}
-            onChange={(e) => updateMonthlyBudget(e.target.value)}
-          />
-          {monthBudget && (
-            <>
-              <div className={`budget-bar ${budgetState(monthlyUsage)}`}>
-                <div style={{ width: `${Math.min(monthlyUsage, 100)}%` }} />
-              </div>
-              <small>
-                ₹{expense} / ₹{monthBudget} ({monthlyUsage.toFixed(1)}%) -{" "}
-                {budgetMessage(monthlyUsage)}
-              </small>
-            </>
-          )}
-        </div>
-
-        {/* CATEGORY BUDGETS */}
-        <div className="budget-card">
-          <h3>Category Budgets</h3>
-
-          {budgetCategories.map((cat) => {
-            const budget = categoryBudgets[cat];
-            const spent = categoryExpenses[cat] || 0;
-            if (!budget) return null;
-
-            const percent = (spent / budget) * 100;
-
-            return (
-              <div key={cat} className="category-budget">
-                <strong>{cat}</strong>
-                <div className={`budget-bar ${budgetState(percent)}`}>
-                  <div style={{ width: `${Math.min(percent, 100)}%` }} />
-                </div>
-                <small>
-                  ₹{spent} / ₹{budget} ({percent.toFixed(1)}%) —{" "}
-                  {budgetMessage(percent)}
-                </small>
-              </div>
-            );
-          })}
-
-          <div className="category-inputs">
-            {budgetCategories.map((cat) => (
-              <div key={cat} className="category-input">
-                <label>{cat} Budget</label>
-                <input
-                  type="number"
-                  value={categoryBudgets[cat] || ""}
-                  onChange={(e) => updateCategoryBudget(cat, e.target.value)}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* NOTICE BOARD */}
-        {topCategory && (
-          <div className="notice-board">
-            <div className="pin"></div>
-            <h3>Monthly Insights</h3>
-            <p className="notice-highlight">
-              🧾 {topCategory} - ₹{topAmount}
-            </p>
-            {monthComparison && <p className="notice-text">📈 {monthComparison}</p>}
-            {budgetPressure && <p className="notice-text">⚠️ {budgetPressure}</p>}
-            {savingsInsight && <p className="notice-text">💰 {savingsInsight}</p>}
-          </div>
-        )}
-
-        {/* CHARTS */}
-        <div className="charts">
-          {Object.keys(categoryExpenses).length > 0 && (
-            <div className="chart-card pie-small">
-              <h3>Category-wise Spending</h3>
-              <div className="pie-wrapper">
-                <Pie data={pieData} options={pieOptions} />
-              </div>
-            </div>
-          )}
-
-          <div className="chart-card">
-            <h3>Income vs Expense</h3>
-            <Bar data={barData} />
-          </div>
-
-          {filteredTransactions.length > 1 && (
-            <div className="chart-card">
-              <h3>Balance Trend</h3>
-              <Line data={lineData} />
-            </div>
-          )}
-        </div>
-
-        {/* TRANSACTIONS */}
-        <ul className="transactions">
-          {filteredTransactions.map((t, i) => (
-            <li key={i} className={t.type.toLowerCase()}>
-              <div>
-                <strong>{t.category}</strong>
-                <span>{months[selectedMonth]} {currentYear}</span>
-              </div>
-              <div>
-                ₹{t.amount}
-                <button onClick={() => deleteTransaction(i)}>✕</button>
-              </div>
-            </li>
-          ))}
-        </ul>
-
+ 
         {/* FORM */}
         <div className="form">
           <input
@@ -458,7 +403,84 @@ function App() {
           </select>
           <button onClick={addTransaction}>Add</button>
         </div>
-
+ 
+        {/* MONTHLY BUDGET */}
+        <div className="budget-card">
+          <h3>Monthly Budget</h3>
+          <input
+            type="number"
+            placeholder="Set monthly budget"
+            value={monthBudget}
+            onChange={(e) => updateMonthlyBudget(e.target.value)}
+          />
+          {monthBudget && (
+            <>
+              <div className={`budget-bar ${budgetState(monthlyUsage)}`}>
+                <div style={{ width: `${Math.min(monthlyUsage, 100)}%` }} />
+              </div>
+              <small>
+                ₹{expense} / ₹{monthBudget} ({monthlyUsage.toFixed(1)}%) -{" "}
+                {budgetMessage(monthlyUsage)}
+              </small>
+            </>
+          )}
+        </div>
+ 
+ 
+        {/* NOTICE BOARD */}
+        {topCategory && (
+          <div className="notice-board">
+            <div className="pin"></div>
+            <h3>Monthly Insights</h3>
+            <p className="notice-highlight">
+              🧾 {topCategory} - ₹{topAmount}
+            </p>
+            {monthComparison && <p className="notice-text">📈 {monthComparison}</p>}
+            {budgetPressure && <p className="notice-text">⚠️ {budgetPressure}</p>}
+            {savingsInsight && <p className="notice-text">💰 {savingsInsight}</p>}
+          </div>
+        )}
+ 
+        {/* CHARTS */}
+        <div className="charts">
+          {Object.keys(categoryExpenses).length > 0 && (
+            <div className="chart-card pie-small">
+              <h3>Category-wise Spending</h3>
+              <div className="pie-wrapper">
+                <Pie data={pieData} options={pieOptions} />
+              </div>
+            </div>
+          )}
+ 
+          <div className="chart-card">
+            <h3>Income vs Expense</h3>
+            <Bar data={barData} />
+          </div>
+ 
+          {filteredTransactions.length > 1 && (
+            <div className="chart-card">
+              <h3>Balance Trend</h3>
+              <Line data={lineData} />
+            </div>
+          )}
+        </div>
+ 
+        {/* TRANSACTIONS */}
+        <ul className="transactions">
+          {filteredTransactions.map((t, i) => (
+            <li key={i} className={t.type.toLowerCase()}>
+              <div>
+                <strong>{t.category}</strong>
+                <span>{months[selectedMonth]} {currentYear}</span>
+              </div>
+              <div>
+                ₹{t.amount}
+                <button onClick={() => deleteTransaction(i)}>✕</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+ 
         {/* CONTACT US */}
         <div className="contact-card">
           <h3>📩 Contact & Support</h3>
@@ -469,7 +491,7 @@ function App() {
             👩‍💻 Developer: <strong>Mihika</strong><br />
             📧 Email: <strong>mihika11saxena@gmail.com</strong>
           </p>
-
+ 
           <form onSubmit={handleContactSubmit}>
             <textarea
               placeholder="Write your message here..."
@@ -482,10 +504,10 @@ function App() {
             )}
           </form>
         </div>
-
+ 
       </div>
     </div>
   );
 }
-
+ 
 export default App;
