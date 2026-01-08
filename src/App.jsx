@@ -329,7 +329,7 @@ function App() {
                 <div style={{ width: `${Math.min(monthlyUsage, 100)}%` }} />
               </div>
               <small>
-                ₹{expense} / ₹{monthBudget} ({monthlyUsage.toFixed(1)}%) —{" "}
+                ₹{expense} / ₹{monthBudget} ({monthlyUsage.toFixed(1)}%) -{" "}
                 {budgetMessage(monthlyUsage)}
               </small>
             </>
