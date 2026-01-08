@@ -340,3 +340,53 @@ button:hover {
   align-items: center;
 }
 
+.budget-card {
+  background: white;
+  padding: 18px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+}
+
+.budget-bar {
+  height: 10px;
+  background: #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.budget-bar div {
+  height: 100%;
+}
+
+.budget-bar.normal div { background: #22c55e; }
+.budget-bar.warning div { background: #facc15; }
+.budget-bar.danger div { background: #ef4444; }
+
+.category-budget {
+  margin-bottom: 10px;
+}
+
+.category-inputs input {
+  margin-right: 8px;
+  margin-top: 8px;
+  width: 120px;
+}
+
+.category-input {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.category-input label {
+  font-size: 13px;
+  color: #374151;
+  margin-bottom: 4px;
+}
+
+.budget-card small {
+  display: block;
+  margin-top: 4px;
+  font-size: 13px;
+}
