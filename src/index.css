@@ -475,3 +475,59 @@ button:hover {
     transform: translateY(0) rotate(-0.5deg);
   }
 }
+
+/* ===== THEME BASE ===== */
+body.light {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
+  --accent: #6366f1;
+}
+
+body.dark {
+  --bg: #0f172a;
+  --card: #1e293b;
+  --text: #e5e7eb;
+  --muted: #94a3b8;
+  --accent: #818cf8;
+}
+
+/* ===== APPLY VARIABLES ===== */
+body {
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.container,
+.card,
+.budget-card,
+.chart-card,
+.notice-board {
+  background: var(--card);
+  color: var(--text);
+}
+
+.notice-text,
+small,
+span {
+  color: var(--muted);
+}
+
+button {
+  background: var(--accent);
+}
+
+/* ===== TOGGLE BUTTON ===== */
+.theme-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.theme-toggle button {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+}

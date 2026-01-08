@@ -493,6 +493,16 @@ ChartJS.register(
 );
 
 function App() {
+  /* ================= THEME ================= */
+  const [theme, setTheme] = useState(
+    () => localStorage.getItem("theme") || "light"
+  );
+
+  useEffect(() => {
+    document.body.className = theme;
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
   /* ================= STATE ================= */
   const [transactions, setTransactions] = useState(() => {
     const saved = localStorage.getItem("transactions");
@@ -513,7 +523,7 @@ function App() {
   const currentYear = new Date().getFullYear();
   const monthKey = `${currentYear}-${String(selectedMonth + 1).padStart(2, "0")}`;
 
-  /* ================= PERSISTENCE ================= */
+  /* ================= PERSIST ================= */
   useEffect(() => {
     localStorage.setItem("transactions", JSON.stringify(transactions));
   }, [transactions]);
@@ -536,50 +546,37 @@ function App() {
     .filter((t) => t.type === "Expense")
     .reduce((s, t) => s + t.amount, 0);
 
-    // ===== MONTH-OVER-MONTH COMPARISON =====
-const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
-const prevYear = selectedMonth === 0 ? currentYear - 1 : currentYear;
-
-const prevMonthExpense = transactions
-  .filter((t) => {
-    const d = new Date(t.date);
-    return (
-      d.getMonth() === prevMonth &&
-      d.getFullYear() === prevYear &&
-      t.type === "Expense"
-    );
-  })
-  .reduce((s, t) => s + t.amount, 0);
-
-let monthComparison = null;
-
-if (prevMonthExpense > 0) {
-  const diff = expense - prevMonthExpense;
-  const percent = Math.abs((diff / prevMonthExpense) * 100).toFixed(1);
-
-  monthComparison =
-    diff > 0
-      ? `Your expenses increased by ${percent}% compared to last month.`
-      : `Your expenses decreased by ${percent}% compared to last month.`;
-}
-
-
   const balance = income - expense;
 
-  // ===== SAVINGS HEALTH INSIGHT =====
-let savingsInsight = null;
+  /* ================= PREVIOUS MONTH COMPARISON ================= */
+  const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+  const prevYear = selectedMonth === 0 ? currentYear - 1 : currentYear;
 
-if (income > 0) {
-  const savedPercent = ((balance / income) * 100).toFixed(0);
-  savingsInsight = `You saved ${savedPercent}% of your income this month 👏.`;
-}
+  const prevMonthExpense = transactions
+    .filter((t) => {
+      const d = new Date(t.date);
+      return (
+        d.getMonth() === prevMonth &&
+        d.getFullYear() === prevYear &&
+        t.type === "Expense"
+      );
+    })
+    .reduce((s, t) => s + t.amount, 0);
 
+  let monthComparison = null;
+  if (prevMonthExpense > 0) {
+    const diff = expense - prevMonthExpense;
+    const percent = Math.abs((diff / prevMonthExpense) * 100).toFixed(1);
+    monthComparison =
+      diff > 0
+        ? `Your expenses increased by ${percent}% compared to last month.`
+        : `Your expenses decreased by ${percent}% compared to last month.`;
+  }
 
   /* ================= TRANSACTIONS ================= */
   function addTransaction() {
     if (!amount) return;
     const value = Number(amount);
-
     if (type === "Expense" && value > balance) return;
 
     const finalCategory =
@@ -621,16 +618,20 @@ if (income > 0) {
         (categoryExpenses[t.category] || 0) + t.amount;
     });
 
-    // ===== BUDGET PRESSURE INSIGHT =====
-const exceededCategories = Object.entries(categoryBudgets)
-  .filter(([cat, budget]) => categoryExpenses[cat] > budget)
-  .map(([cat]) => cat);
+  const exceededCategories = Object.entries(categoryBudgets)
+    .filter(([cat, b]) => categoryExpenses[cat] > b)
+    .map(([cat]) => cat);
 
-const budgetPressure =
-  exceededCategories.length > 0
-    ? `You exceeded ${exceededCategories.join(" and ")} budgets this month.`
-    : null;
+  const budgetPressure =
+    exceededCategories.length > 0
+      ? `You exceeded ${exceededCategories.join(" and ")} budgets this month.`
+      : null;
 
+  let savingsInsight = null;
+  if (income > 0) {
+    const savedPercent = ((balance / income) * 100).toFixed(0);
+    savingsInsight = `You saved ${savedPercent}% of your income this month 👏.`;
+  }
 
   function budgetState(p) {
     if (p >= 100) return "danger";
@@ -668,7 +669,7 @@ const budgetPressure =
     });
   }
 
-  /* ================= INSIGHT ================= */
+  /* ================= TOP CATEGORY ================= */
   let topCategory = null;
   let topAmount = 0;
   Object.entries(categoryExpenses).forEach(([cat, amt]) => {
@@ -696,7 +697,7 @@ const budgetPressure =
   };
 
   const pieOptions = {
-    responsive: false,
+    responsive: true,
     maintainAspectRatio: false,
     plugins: { legend: { position: "bottom" } },
   };
@@ -739,6 +740,12 @@ const budgetPressure =
   return (
     <div className="app">
       <div className="container">
+        <div className="theme-toggle">
+          <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+            {theme === "light" ? "🌙 Dark Mode" : "☀️ Light Mode"}
+          </button>
+        </div>
+
         <h1>Expense Tracker</h1>
 
         {/* MONTH SELECTOR */}
@@ -761,7 +768,7 @@ const budgetPressure =
           <div className="card expense"><span>Expense</span><h2>₹{expense}</h2></div>
         </div>
 
-        {/* ===== MONTHLY BUDGET ===== */}
+        {/* MONTHLY BUDGET */}
         <div className="budget-card">
           <h3>Monthly Budget</h3>
           <input
@@ -770,21 +777,20 @@ const budgetPressure =
             value={monthBudget}
             onChange={(e) => updateMonthlyBudget(e.target.value)}
           />
-
           {monthBudget && (
             <>
               <div className={`budget-bar ${budgetState(monthlyUsage)}`}>
                 <div style={{ width: `${Math.min(monthlyUsage, 100)}%` }} />
               </div>
               <small>
-                ₹{expense} / ₹{monthBudget} used ({monthlyUsage.toFixed(1)}%) —{" "}
+                ₹{expense} / ₹{monthBudget} ({monthlyUsage.toFixed(1)}%) —{" "}
                 {budgetMessage(monthlyUsage)}
               </small>
             </>
           )}
         </div>
 
-        {/* ===== CATEGORY BUDGETS ===== */}
+        {/* CATEGORY BUDGETS */}
         <div className="budget-card">
           <h3>Category Budgets</h3>
 
@@ -816,44 +822,26 @@ const budgetPressure =
                 <input
                   type="number"
                   value={categoryBudgets[cat] || ""}
-                  onChange={(e) =>
-                    updateCategoryBudget(cat, e.target.value)
-                  }
-                  placeholder={`Set ${cat} budget`}
+                  onChange={(e) => updateCategoryBudget(cat, e.target.value)}
                 />
               </div>
             ))}
           </div>
         </div>
 
-        {/* NOTICE BOARD INSIGHT */}
+        {/* NOTICE BOARD */}
         {topCategory && (
-  <div className="notice-board">
-    <div className="pin"></div>
-    <h3>Monthly Insights</h3>
-
-    <p className="notice-text">
-      🧾 Highest spending category:
-    </p>
-    <p className="notice-highlight">
-      {topCategory} — ₹{topAmount}
-    </p>
-
-    {monthComparison && (
-      <p className="notice-text">📈 {monthComparison}</p>
-    )}
-
-    {budgetPressure && (
-      <p className="notice-text">⚠️ {budgetPressure}</p>
-    )}
-
-    {savingsInsight && (
-      <p className="notice-text">💰 {savingsInsight}</p>
-    )}
-  </div>
-)}
-
-
+          <div className="notice-board">
+            <div className="pin"></div>
+            <h3>Monthly Insights</h3>
+            <p className="notice-highlight">
+              🧾 {topCategory} — ₹{topAmount}
+            </p>
+            {monthComparison && <p className="notice-text">📈 {monthComparison}</p>}
+            {budgetPressure && <p className="notice-text">⚠️ {budgetPressure}</p>}
+            {savingsInsight && <p className="notice-text">💰 {savingsInsight}</p>}
+          </div>
+        )}
 
         {/* CHARTS */}
         <div className="charts">
@@ -879,36 +867,6 @@ const budgetPressure =
           )}
         </div>
 
-        {/* TRANSACTION FORM */}
-        <div className="form">
-          <input
-            type="number"
-            placeholder="Amount"
-            value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-          />
-          <select value={category} onChange={(e) => setCategory(e.target.value)}>
-            <option>Food</option>
-            <option>Rent</option>
-            <option>Travel</option>
-            <option>Shopping</option>
-            <option>Salary</option>
-            <option>Other</option>
-          </select>
-          {category === "Other" && (
-            <input
-              placeholder="Custom category"
-              value={customCategory}
-              onChange={(e) => setCustomCategory(e.target.value)}
-            />
-          )}
-          <select value={type} onChange={(e) => setType(e.target.value)}>
-            <option>Income</option>
-            <option>Expense</option>
-          </select>
-          <button onClick={addTransaction}>Add</button>
-        </div>
-
         {/* TRANSACTIONS */}
         <ul className="transactions">
           {filteredTransactions.map((t, i) => (
@@ -924,6 +882,25 @@ const budgetPressure =
             </li>
           ))}
         </ul>
+
+        {/* FORM */}
+        <div className="form">
+          <input type="number" placeholder="Amount" value={amount}
+            onChange={(e) => setAmount(e.target.value)} />
+          <select value={category} onChange={(e) => setCategory(e.target.value)}>
+            <option>Food</option><option>Rent</option><option>Travel</option>
+            <option>Shopping</option><option>Salary</option><option>Other</option>
+          </select>
+          {category === "Other" && (
+            <input placeholder="Custom category"
+              value={customCategory}
+              onChange={(e) => setCustomCategory(e.target.value)} />
+          )}
+          <select value={type} onChange={(e) => setType(e.target.value)}>
+            <option>Income</option><option>Expense</option>
+          </select>
+          <button onClick={addTransaction}>Add</button>
+        </div>
 
       </div>
     </div>
