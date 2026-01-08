@@ -332,13 +332,20 @@ button:hover {
   border-radius: 8px;
 }
 
-.pie-wrapper {
+/* .pie-wrapper {
   width: 240px;
   height: 240px;
   display: flex;
   justify-content: center;
   align-items: center;
+} */
+ 
+.pie-wrapper {
+  width: 360px;
+  height: 360px;
+  margin: 0 auto;
 }
+
 
 .budget-card {
   background: white;
@@ -389,4 +396,82 @@ button:hover {
   display: block;
   margin-top: 4px;
   font-size: 13px;
+}
+
+.report-card {
+  background: #f8fafc;
+  border-left: 5px solid #6366f1;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.report-card h3 {
+  margin: 0 0 6px;
+  font-size: 16px;
+}
+
+.report-card p {
+  margin: 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.notice-board {
+  position: relative;
+  background: #fff7ed;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 24px 0;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  transform: rotate(-0.5deg);
+  animation: noteFadeIn 0.4s ease;
+}
+
+.notice-board h3 {
+  margin-top: 10px;
+  margin-bottom: 8px;
+  font-size: 16px;
+  color: #92400e;
+  text-align: center;
+}
+
+.notice-text {
+  font-size: 14px;
+  color: #374151;
+  text-align: center;
+}
+
+.notice-highlight {
+  margin-top: 6px;
+  font-size: 20px;
+  font-weight: 700;
+  color: #78350f;
+  text-align: center;
+}
+
+/* 📌 Pin */
+.pin {
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 14px;
+  background: #ef4444;
+  border-radius: 50%;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* subtle animation */
+@keyframes noteFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px) rotate(-1deg);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-0.5deg);
+  }
 }
