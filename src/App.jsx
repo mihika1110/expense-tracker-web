@@ -726,7 +726,44 @@ function App() {
     .filter((t) => t.type === "Expense")
     .reduce((s, t) => s + t.amount, 0);
 
+    // ===== MONTH-OVER-MONTH COMPARISON =====
+const prevMonth = selectedMonth === 0 ? 11 : selectedMonth - 1;
+const prevYear = selectedMonth === 0 ? currentYear - 1 : currentYear;
+
+const prevMonthExpense = transactions
+  .filter((t) => {
+    const d = new Date(t.date);
+    return (
+      d.getMonth() === prevMonth &&
+      d.getFullYear() === prevYear &&
+      t.type === "Expense"
+    );
+  })
+  .reduce((s, t) => s + t.amount, 0);
+
+let monthComparison = null;
+
+if (prevMonthExpense > 0) {
+  const diff = expense - prevMonthExpense;
+  const percent = Math.abs((diff / prevMonthExpense) * 100).toFixed(1);
+
+  monthComparison =
+    diff > 0
+      ? `Your expenses increased by ${percent}% compared to last month.`
+      : `Your expenses decreased by ${percent}% compared to last month.`;
+}
+
+
   const balance = income - expense;
+
+  // ===== SAVINGS HEALTH INSIGHT =====
+let savingsInsight = null;
+
+if (income > 0) {
+  const savedPercent = ((balance / income) * 100).toFixed(0);
+  savingsInsight = `You saved ${savedPercent}% of your income this month 👏.`;
+}
+
 
   /* ================= TRANSACTIONS ================= */
   function addTransaction() {
@@ -773,6 +810,17 @@ function App() {
       categoryExpenses[t.category] =
         (categoryExpenses[t.category] || 0) + t.amount;
     });
+
+    // ===== BUDGET PRESSURE INSIGHT =====
+const exceededCategories = Object.entries(categoryBudgets)
+  .filter(([cat, budget]) => categoryExpenses[cat] > budget)
+  .map(([cat]) => cat);
+
+const budgetPressure =
+  exceededCategories.length > 0
+    ? `You exceeded ${exceededCategories.join(" and ")} budgets this month.`
+    : null;
+
 
   function budgetState(p) {
     if (p >= 100) return "danger";
@@ -970,17 +1018,32 @@ function App() {
 
         {/* NOTICE BOARD INSIGHT */}
         {topCategory && (
-          <div className="notice-board">
-            <div className="pin"></div>
-            <h3>Monthly Spending Insight</h3>
-            <p className="notice-text">
-              Your highest spending category this month is
-            </p>
-            <p className="notice-highlight">
-              {topCategory} — ₹{topAmount}
-            </p>
-          </div>
-        )}
+  <div className="notice-board">
+    <div className="pin"></div>
+    <h3>Monthly Insights</h3>
+
+    <p className="notice-text">
+      🧾 Highest spending category:
+    </p>
+    <p className="notice-highlight">
+      {topCategory} — ₹{topAmount}
+    </p>
+
+    {monthComparison && (
+      <p className="notice-text">📈 {monthComparison}</p>
+    )}
+
+    {budgetPressure && (
+      <p className="notice-text">⚠️ {budgetPressure}</p>
+    )}
+
+    {savingsInsight && (
+      <p className="notice-text">💰 {savingsInsight}</p>
+    )}
+  </div>
+)}
+
+
 
         {/* CHARTS */}
         <div className="charts">
