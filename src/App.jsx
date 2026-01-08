@@ -543,14 +543,17 @@ function App() {
             <option>Food</option>
             <option>Rent</option>
             <option>Travel</option>
+            <option>Fuel</option>
             <option>Shopping</option>
+            <option>Bills</option>
+            <option>Subscriptions</option>
             <option>Salary</option>
-            <option>Other</option>
+            <option>Others</option>
           </select>
 
-          {category === "Other" && (
+          {category === "Others" && (
             <input
-              placeholder="Custom category"
+              placeholder="Custom Category"
               value={customCategory}
               onChange={(e) => setCustomCategory(e.target.value)}
             />
